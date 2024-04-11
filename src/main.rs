@@ -1,6 +1,5 @@
 use std::time::Instant;
 use rand::prelude::*;
-
 use crate::{algorithms::sorter::Sorter, collections::linked_list::LinkedList};
 mod collections;
 mod algorithms;
@@ -36,17 +35,24 @@ fn test_linked_list() {
 
 fn test_sorters() {
     let sorter = Sorter::new(Box::new(number_sorter));
-    let length = 100_000;
-    let mut array: Vec<i32> = (0..length).collect();
+    let length = 10_000;
+    let mut average_case: Vec<i32> = (0..length).collect();
+    let mut inverse_case: Vec<i32> = average_case.clone();
+    let ordered_case: Vec<i32> = average_case.clone();
     let mut rng = rand::thread_rng();
 
-    array.shuffle(&mut rng);
-
-    measure_time(|collection| sorter.selection_sort(collection), &mut array.clone(), "Selection Sort");
-    measure_time(|collection| sorter.bubble_sort(collection), &mut array.clone(), "Bubble Sort");
-    measure_time(|collection| sorter.insertion_sort(collection), &mut array.clone(), "Insertion Sort");
-    measure_time(|collection| sorter.quick_sort(collection), &mut array.clone(), "Quick Sort");
-
+    average_case.shuffle(&mut rng);
+    inverse_case.reverse();
+    for tuple in [(average_case, "Average case"), (inverse_case, "Inverse case"), (ordered_case, "Ordered case")] {
+        let array = tuple.0;
+        println!("\n---------- {} ----------", tuple.1);
+        measure_time(|collection| sorter.selection_sort(collection), &mut array.clone(), "Selection Sort");
+        measure_time(|collection| sorter.bubble_sort(collection), &mut array.clone(), "Bubble Sort");
+        measure_time(|collection| sorter.insertion_sort(collection), &mut array.clone(), "Insertion Sort");
+        measure_time(|collection| sorter.quick_sort(collection), &mut array.clone(), "Quicksort");
+        measure_time(|collection| sorter.merge_sort(collection), &mut array.clone(), "Merge Sort");
+    }
+    
 }
 
 fn main() {

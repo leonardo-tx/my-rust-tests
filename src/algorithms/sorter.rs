@@ -1,4 +1,4 @@
-use std::usize;
+use std::{isize, usize};
 
 pub struct Sorter<T> {
     compare_fn: Box<dyn Fn(&T, &T) -> i32>
@@ -10,16 +10,16 @@ impl<T> Sorter<T> {
     }
 
     pub fn bubble_sort(&self, collection: &mut [T]) {
-        let mut i = collection.len() - 1;
+        let mut i: isize = (collection.len() - 1) as isize;
         let mut sorted = false;
 
-        while !sorted && i > 0 {
+        while !sorted {
             sorted = true;
             for j in 0..i {
-                if (self.compare_fn)(&collection[j], &collection[j + 1]) <= 0 {
+                if (self.compare_fn)(&collection[j as usize], &collection[(j + 1) as usize]) <= 0 {
                     continue;
                 }
-                collection.swap(j, j + 1);
+                collection.swap(j as usize, (j + 1) as usize);
                 sorted = false;
             }
             i -= 1;
@@ -84,6 +84,54 @@ impl<T> Sorter<T> {
     }
 
     pub fn quick_sort(&self, collection: &mut [T]) {
-        return self.quick_sort_recursion(collection, 0, (collection.len() - 1) as isize);
+        self.quick_sort_recursion(collection, 0, (collection.len() - 1) as isize);
+    }
+}
+
+impl<T : Clone> Sorter<T> {
+    fn merge(&self, collection: &mut [T], temp: &mut Vec<T>, first: usize, mid: usize, last: usize) {        
+        let mut i = first;
+        let mut j = mid + 1;
+
+        while i <= mid && j <= last {
+            if (self.compare_fn)(&collection[i], &collection[j]) <= 0 {
+                temp.push(collection[i].clone());
+                i += 1;
+            } else {
+                temp.push(collection[j].clone());
+                j += 1;
+            }
+        }
+        while i <= mid {
+            temp.push(collection[i].clone());
+            i += 1;
+        }
+        while j <= last {
+            temp.push(collection[j].clone());
+            j += 1;
+        }
+        for k in first..=last {
+            collection[last + first - k] = temp.pop().unwrap();
+        }
+    }
+
+    fn merge_sort_recursion(&self, collection: &mut [T], temp: &mut Vec<T>, first: usize, last: usize) {
+        if first >= last {
+            return;
+        }
+
+        let mid = (first + last) / 2;
+        self.merge_sort_recursion(collection, temp, first, mid);
+        self.merge_sort_recursion(collection, temp, mid + 1, last);
+        self.merge(collection, temp, first, mid, last);
+    }
+
+    pub fn merge_sort(&self, collection: &mut [T]) {
+        let size = collection.len();
+        if size == 0 {
+            return;
+        }
+        let mut temp: Vec<T> = Vec::with_capacity(size);
+        self.merge_sort_recursion(collection, &mut temp, 0, size - 1); 
     }
 }
